@@ -3,75 +3,75 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CategoryResource\Pages;
-use App\Filament\Resources\CategoryResource\RelationManagers;
-use App\Models\Category; // The Eloquent Model
-use Filament\Forms;
+use App\Models\Category;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-// Imports for Form Components
-use Filament\Forms\Components\Section;
+// Forms Component Imports
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Toggle;
-// Imports for Form Logic
-use Illuminate\Support\Str;
+// Forms Logic Imports
 use Filament\Forms\Set;
-// Imports for Table Actions/Columns
-use Filament\Tables\Actions\ActionGroup; 
-use Filament\Tables\Actions\ViewAction; 
-use Filament\Tables\Actions\EditAction; 
+use Illuminate\Support\Str;
+// Tables Component Imports
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\ViewAction;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Columns\ImageColumn; // Added explicit ImageColumn import
-use Filament\Tables\Columns\IconColumn; // Added explicit IconColumn import
-
+use Filament\Tables;
 
 class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-tag';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static ?int $navigationSort = 3;
+
+    // ✅ Added navigation badge for consistency
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Section::make([
-                    Grid::make(2) // Ensured grid has columns(2) here
-                        ->schema([
-                            TextInput::make('name')
-                                ->required()
-                                ->maxLength(255)
-                                ->live(onBlur: true) 
-                                ->afterStateUpdated(function ($state, Set $set, $operation) {
-                                    if ($operation === 'create' || empty($set->get('slug'))) {
-                                        $set('slug', Str::slug($state));
-                                    }
-                                }),
+                Section::make()->schema([
+                    Grid::make(2)->schema([
+                        TextInput::make('name')
+                            ->required()
+                            ->maxLength(255)
+                            ->live(onBlur: true)
+                            // Filaments 3+ recommends the $operation check in afterStateUpdated
+                            ->afterStateUpdated(fn (string $operation, Set $set, ?string $state) => $operation === 'create' ? $set('slug', Str::slug($state)) : null),
 
-                            TextInput::make('slug')
-                                ->maxLength(255)
-                                ->required()
-                                ->unique(Category::class, 'slug', ignoreRecord: true)
-                                ->disabled() 
-                                ->dehydrated(true), 
-                        ]),
-                    
+                        TextInput::make('slug')
+                            ->required()
+                            ->maxLength(255)
+                            ->disabled()
+                            ->unique(Category::class, 'slug', ignoreRecord: true)
+                            ->dehydrated(true),
+                    ]),
+
                     FileUpload::make('image')
                         ->image()
-                        ->directory('categories')
-                        ->disk('public')
-                        ->columnSpanFull(), 
+                        ->directory('categories') // Set the storage directory
+                        ->visibility('public')   // Set the visibility (replaces ->disk('public'))
+                        ->label('Category Image'),
 
                     Toggle::make('is_active')
                         ->required()
                         ->default(true)
-                        ->columnSpanFull(),
-                ])->columns(2), // Set column count on the Section itself
+                        ->label('Active'),
+                ])
             ]);
     }
 
@@ -79,30 +79,23 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable()
-                    ->sortable(), // Added sortable
+                    ->sortable(),
 
-                Tables\Columns\TextColumn::make('slug')
+                TextColumn::make('slug')
                     ->searchable()
-                    ->sortable(), // Added sortable
+                    ->sortable(),
 
-                // 🟢 FIX: Cleaned up ImageColumn to match BrandResource
                 ImageColumn::make('image')
-                    ->disk('public') // Tells the column where to look
-                    ->circular(), // Optional formatting
-                // END FIX
+                    ->square()
+                    ->label('Image'),
 
-                Tables\Columns\IconColumn::make('is_active')
-                    ->boolean()
-                    ->sortable(), // Added sortable
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('updated_at')
+                IconColumn::make('is_active')
+                    ->label('Active')
+                    ->boolean(),
+                    
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -115,7 +108,7 @@ class CategoryResource extends Resource
                     ViewAction::make(),
                     EditAction::make(),
                     DeleteAction::make(),
-                ])
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

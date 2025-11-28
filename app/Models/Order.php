@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne; // <--- ADD THIS IMPORT
 
 class Order extends Model
 {
@@ -11,25 +14,38 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
-        'grand_total',
         'payment_method',
         'payment_status',
         'status',
         'currency',
-        'shipping_amount',
         'shipping_method',
+        'shipping_amount',
         'notes',
-
-
+        'grand_total',
     ];
-    
-    public function user() {
+
+    // Cast monetary values to decimal to ensure precision
+    protected $casts = [
+        'grand_total' => 'decimal:2',
+        'shipping_amount' => 'decimal:2',
+    ];
+
+    public function user(): BelongsTo
+    {
         return $this->belongsTo(User::class);
     }
-     public function items() {
-        return $this->hasMany(OrderItem::class);
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(OrderItem::class, 'order_id', 'id');
     }
-     public function address() {
+
+    /**
+     * Define the relationship to the Address model (Shipping/Billing).
+     */
+    public function address(): HasOne // <--- ADD THIS FUNCTION
+    {
+        // This links the Order to one Address record (the shipping/billing address)
         return $this->hasOne(Address::class);
     }
 }

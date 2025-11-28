@@ -7,21 +7,20 @@ use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Pages\CreateRecord; // <-- ADDED: Needed for the conditional logic in the password field
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Columns\TextColumn; // <-- ADDED: Needed for table columns
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-// REMOVED: use Illuminate\Database\Eloquent\SoftDeletingScope; (Not used, but harmless)
+use App\Filament\Resources\UserResource\RelationManagers\OrdersRelationManager;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    // Use the Users icon
     protected static ?string $navigationIcon = 'heroicon-o-users';
+
+    // REMOVED: protected static ?string $navigationGroup = 'Shop'; 
 
     public static function form(Form $form): Form
     {
@@ -29,25 +28,21 @@ class UserResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->required()
-                    ->maxLength(255), // Good practice
-
+                    ->maxLength(255),
                 Forms\Components\TextInput::make('email')
                     ->label('Email Address')
+                    ->required()
                     ->email()
-                    ->maxLength(255)
                     ->unique(ignoreRecord: true)
-                    ->required(),    
-
+                    ->maxLength(255),
                 Forms\Components\DateTimePicker::make('email_verified_at')
                     ->label('Email Verified At')
                     ->default(now()),
-
                 Forms\Components\TextInput::make('password')
                     ->password()
-                    // If the field state is not empty, hash the password (dehydrate)
-                    ->dehydrated(fn (?string $state): bool => filled($state)) 
-                    // <-- FIXED: Use $operation to check if it's the 'create' page. 
-                    ->required(fn (string $operation): bool => $operation === 'create')
+                    ->dehydrated(fn ($state) => filled($state))
+                    ->required(fn (string $context): bool => $context === 'create')
+                    ->maxLength(255),
             ]);
     }
 
@@ -55,27 +50,25 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-               Tables\Columns\TextColumn::make('name')
-                ->searchable(),
-               Tables\Columns\TextColumn::make('email')
-                ->searchable(),
-               Tables\Columns\TextColumn::make('email_verified_at')
-                ->dateTime()
-                ->sortable(),
-               Tables\Columns\TextColumn::make('created_at')
-                ->dateTime()
-                ->sortable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('email')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('email_verified_at')
+                    ->dateTime()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable(),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\EditAction::make(),
-                    Tables\Actions\ViewAction::make(),
-                    Tables\Actions\DeleteAction::make(),
-
-                ])
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -87,7 +80,7 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            OrdersRelationManager::class,
         ];
     }
 

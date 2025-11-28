@@ -3,15 +3,10 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\BrandResource\Pages;
-use App\Filament\Resources\BrandResource\RelationManagers;
-use App\Models\Brand; // The Eloquent Model
-use Filament\Forms;
+use App\Models\Brand;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 // Imports for Form Components
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Grid;
@@ -29,6 +24,7 @@ use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables;
 
 
 class BrandResource extends Resource
@@ -36,6 +32,14 @@ class BrandResource extends Resource
     protected static ?string $model = Brand::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-bookmark';
+
+    protected static ?int $navigationSort = 5;
+
+    // ✅ Added navigation badge for consistency
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
 
     public static function form(Form $form): Form
     {
@@ -50,23 +54,21 @@ class BrandResource extends Resource
                                 ->live(onBlur: true) // Update when user tabs out
                                 ->afterStateUpdated(function ($state, Set $set, $operation) {
                                     // Generate slug on create, or if slug is empty on edit
-                                    if ($operation === 'create' || empty($set('slug'))) {
-                                        $set('slug', Str::slug($state));
-                                    }
-                                }),
+                                    $set('slug', Str::slug($state));
+                                }), // Simplified slug logic to always update, as slug is disabled/dehydrated
 
                             TextInput::make('slug')
                                 ->maxLength(255)
                                 ->required()
-                                ->unique(Brand::class, 'slug', ignoreRecord: true) // FIXED: Uses Brand::class
-                                ->disabled() 
-                                ->dehydrated(true), 
+                                ->unique(Brand::class, 'slug', ignoreRecord: true)
+                                ->disabled()
+                                ->dehydrated(true),
                         ]),
                     
                     FileUpload::make('image')
                         ->image()
-                        ->disk('public')
-                        ->directory('brands') // FIXED: Uses 'brands' directory
+                        ->directory('brands') // This is correct for FileUpload
+                        ->visibility('public') // ✅ Best practice: use visibility instead of disk('public')
                         ->columnSpanFull(),
 
                     Toggle::make('is_active')
@@ -90,9 +92,9 @@ class BrandResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                ImageColumn::make('image') // ADDED: Image Column
-                    ->disk('public')
+                ImageColumn::make('image')
                     ->circular(),
+                    // ImageColumn automatically looks in storage/app/public/brands if configured in FileUpload
 
                 IconColumn::make('is_active')
                     ->label('Active')
