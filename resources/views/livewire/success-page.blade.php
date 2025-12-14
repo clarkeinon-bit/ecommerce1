@@ -3,7 +3,7 @@
     <div>
       <h1 class="px-4 mb-8 text-2xl font-semibold tracking-wide text-gray-700 dark:text-gray-300 ">
         Thank you. Your order has been received. </h1>
-      <div class="flex border-b border-gray-200 dark:border-gray-700  items-stretch justify-start w-full h-full px-4 mb-8 md:flex-row xl:flex-col md:space-x-6 lg:space-x-8 xl:space-x-0">
+      <div class="flex border-b border-gray-200 dark:border-gray-700  items-stretch justify-start w-full h-full px-4 mb-8 md:flex-row xl:flex-col md:space-x-6 lg:space-x-8 xl:space-x-0">
         <div class="flex items-start justify-start flex-shrink-0">
           <div class="flex items-center justify-center w-full pb-6 space-x-4 md:justify-start">
             <div class="flex flex-col items-start justify-start space-y-2">
@@ -27,8 +27,7 @@
           <p class="mb-2 text-sm leading-5 text-gray-600 dark:text-gray-400 ">
             Date: </p>
           <p class="text-base font-semibold leading-4 text-gray-800 dark:text-gray-400">
-            {{$order->create_at->format('d-m-Y')}}/p>
-        </div>
+            {{$order->created_at?->format('d-m-Y')}}</p> </div>
         <div class="w-full px-4 mb-4 md:w-1/4">
           <p class="mb-2 text-sm font-medium leading-5 text-gray-800 dark:text-gray-400 ">
             Total: </p>

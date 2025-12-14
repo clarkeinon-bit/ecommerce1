@@ -13,7 +13,14 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
+    // File: config/services.php
 
+    // ... (other services)
+    'stripe' => [
+    'secret' => env('STRIPE_SECRET'),
+    'key' => env('STRIPE_KEY'),
+    'webhook' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
 
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),

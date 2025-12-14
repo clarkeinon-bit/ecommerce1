@@ -196,7 +196,7 @@
         <h2 class="text-lg font-semibold mb-4">Summary</h2>
         <div class="flex justify-between mb-2">
           <span>Subtotal</span>
-          <span>{{Number::currency($item->order->garnd_total, 'INR')}}</span>
+          <span>{{Number::currency($item->order->grand_total, 'INR')}}</span>
         </div>
         <div class="flex justify-between mb-2">
           <span>Taxes</span>
@@ -209,7 +209,7 @@
         <hr class="my-2">
         <div class="flex justify-between mb-2">
           <span class="font-semibold">Grand Total</span>
-          <span class="font-semibold">{{Number::currency($item->order->garnd_total, 'INR')}}</span>
+          <span class="font-semibold">{{Number::currency($item->order->grand_total, 'INR')}}</span>
         </div>
 
       </div>
